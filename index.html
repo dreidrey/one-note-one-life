@@ -8,12 +8,16 @@
     <style>
         :root {
             --red: #ff4d4d;
-            --bg: #121212;
-            --panel: #1e1e1e;
-            --input-bg: #252525;
-            --border: #2e2e2e;
-            --text: #b0b0b0;
-            --text-dim: #555;
+            --red-dim: #3a1a1a;
+            --bg: #0f0f0f;
+            --panel: #181818;
+            --sidebar: #141414;
+            --input-bg: #222;
+            --border: #2a2a2a;
+            --text: #c0c0c0;
+            --text-dim: #4a4a4a;
+            --font: 'Segoe UI', system-ui, sans-serif;
+            --mono: 'Courier New', monospace;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,7 +25,8 @@
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: var(--font);
+            font-size: 0.875rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -29,46 +34,109 @@
             padding: 1.5rem;
         }
 
-        .container {
-            background: var(--panel);
-            padding: 2rem;
-            border-radius: 10px;
-            border-top: 3px solid var(--red);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-            width: 100%;
-            max-width: 400px;
-        }
+        .wrapper { width: 100%; max-width: 580px; }
 
-        h1 {
+        .header { text-align: center; margin-bottom: 1.5rem; }
+        .header h1 {
             color: var(--red);
-            text-align: center;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             font-weight: 700;
-            margin-bottom: 0.35rem;
         }
-
-        .subtitle {
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            margin-bottom: 1.75rem;
-        }
-
-        label {
-            display: block;
+        .header p {
             font-size: 0.7rem;
             color: var(--text-dim);
+            margin-top: 0.3rem;
+            letter-spacing: 1px;
+        }
+
+        .card {
+            display: flex;
+            background: var(--panel);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        }
+
+        .sidebar {
+            width: 52px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, color 0.15s;
+            position: relative;
+        }
+        .nav-btn:hover { background: var(--input-bg); color: var(--text); }
+        .nav-btn.active { background: var(--red-dim); color: var(--red); }
+        .nav-btn.enabled { color: var(--red); }
+        .nav-btn svg { width: 16px; height: 16px; }
+
+        .nav-btn::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: calc(100% + 10px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1e1e1e;
+            color: var(--text);
+            font-size: 0.65rem;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            border: 1px solid var(--border);
+            z-index: 10;
+        }
+        .nav-btn:hover::after { opacity: 1; }
+
+        .sidebar-divider {
+            width: 24px;
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .main { flex: 1; padding: 1.5rem; min-width: 0; }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .panel-title {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 0.9rem;
         }
 
         textarea {
             width: 100%;
-            height: 120px;
+            height: 150px;
             background: var(--input-bg);
             color: #ddd;
             border: 1px solid var(--border);
@@ -76,85 +144,178 @@
             padding: 12px;
             resize: none;
             outline: none;
-            font-family: 'Courier New', monospace;
+            font-family: var(--mono);
             font-size: 0.85rem;
             line-height: 1.5;
-            margin-bottom: 1.25rem;
             transition: border-color 0.15s;
         }
         textarea::placeholder { color: var(--text-dim); }
         textarea:focus { border-color: var(--red); }
 
-        .time-group { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+        .char-counter {
+            text-align: right;
+            font-size: 0.62rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            font-family: var(--mono);
+        }
+        .char-counter.warn { color: var(--red); }
 
-        input[type="number"], select {
+        input[type="number"],
+        input[type="password"],
+        select {
             background: var(--input-bg);
             color: #ddd;
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 10px 12px;
+            padding: 9px 12px;
             outline: none;
-            font-family: inherit;
             font-size: 0.85rem;
             transition: border-color 0.15s;
+            width: 100%;
         }
-        input[type="number"] { flex: 1; }
-        select { flex: 2; cursor: pointer; }
-        input[type="number"]:focus,
-        select:focus { border-color: var(--red); }
+        input[type="number"],
+        input[type="password"] { font-family: var(--mono); }
+        select { font-family: var(--font); cursor: pointer; }
+        input:focus, select:focus { border-color: var(--red); }
 
-        button {
+        .row { display: flex; gap: 8px; }
+        .row input[type="number"] { flex: 1; }
+        .row select { flex: 2; }
+
+        .field { margin-bottom: 1rem; }
+        .field label {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .toggle-row:last-of-type { border-bottom: none; }
+        .toggle-label { font-size: 0.82rem; color: var(--text); }
+        .toggle-sub { font-size: 0.65rem; color: var(--text-dim); margin-top: 2px; }
+
+        .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch-track {
+            position: absolute;
+            inset: 0;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .switch-track::after {
+            content: '';
+            position: absolute;
+            width: 12px; height: 12px;
+            background: var(--text-dim);
+            border-radius: 50%;
+            top: 3px; left: 3px;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .switch input:checked + .switch-track { background: var(--red-dim); border-color: var(--red); }
+        .switch input:checked + .switch-track::after { transform: translateX(16px); background: var(--red); }
+
+        .sub-field { margin-top: 0.75rem; display: none; }
+        .sub-field.visible { display: block; }
+
+        .timer-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 0.75rem;
+            padding: 8px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--text-dim);
+        }
+        .timer-dot {
+            width: 6px; height: 6px;
+            background: var(--red);
+            border-radius: 50%;
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+
+        .badge-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 0.75rem; }
+        .badge {
+            font-size: 0.6rem;
+            padding: 2px 7px;
+            border-radius: 3px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);        /* fixed: was --text-dim, now visible */
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: var(--mono);
+        }
+        .badge.on { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+
+        .action-bar { margin-top: 1.25rem; }
+        .btn-generate {
             width: 100%;
             background: var(--red);
             color: #fff;
             border: none;
             border-radius: 6px;
-            padding: 12px;
-            font-family: inherit;
-            font-size: 0.85rem;
+            padding: 11px;
+            font-family: var(--font);
+            font-size: 0.82rem;
             font-weight: 700;
             letter-spacing: 2px;
             text-transform: uppercase;
             cursor: pointer;
             transition: background 0.15s;
         }
-        button:hover { background: #e63c3c; }
+        .btn-generate:hover { background: #e63c3c; }
 
         #linkArea {
             display: none;
-            margin-top: 1.25rem;
+            margin-top: 0.75rem;
             background: var(--input-bg);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 12px 14px;
+            padding: 10px 12px;
         }
-
-        .link-row { display: flex; align-items: center; gap: 10px; }
-
+        .link-row { display: flex; align-items: center; gap: 8px; }
         #generatedLink {
             flex: 1;
-            font-family: 'Courier New', monospace;
-            font-size: 0.75rem;
+            font-family: var(--mono);
+            font-size: 0.72rem;
             color: var(--red);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .copy-btn {
             background: transparent;
-            border: 1px solid #3a3a3a;
+            border: 1px solid var(--border);
             color: var(--text-dim);
             border-radius: 4px;
-            padding: 5px 10px;
-            font-size: 0.7rem;
+            padding: 4px 10px;
+            font-size: 0.65rem;
             letter-spacing: 1px;
             cursor: pointer;
             width: auto;
             flex-shrink: 0;
             transition: border-color 0.15s, color 0.15s;
         }
-        .copy-btn:hover { border-color: var(--red); color: var(--red); background: transparent; }
+        .copy-btn:hover { border-color: var(--red); color: var(--red); }
 
         #toast {
             position: fixed;
@@ -181,34 +342,193 @@
 
 <div id="toast">—</div>
 
-<div class="container">
-    <h1>One Note, One Life</h1>
-    <p class="subtitle">Write once. Read once. Gone forever.</p>
-
-    <label>Note</label>
-    <textarea id="noteInput" placeholder="Write your note here..."></textarea>
-
-    <label>Lifespan</label>
-    <div class="time-group">
-        <input type="number" id="timeValue" value="5" min="1">
-        <select id="timeUnit">
-            <option value="1">Seconds</option>
-            <option value="60">Minutes</option>
-            <option value="3600">Hours</option>
-        </select>
+<div class="wrapper">
+    <div class="header">
+        <h1>One Note, One Life</h1>
+        <p>Write once. Read once. Gone forever.</p>
     </div>
 
-    <button onclick="createNote()">Generate Link</button>
+    <div class="card">
 
-    <div id="linkArea">
-        <div class="link-row">
-            <span id="generatedLink"></span>
-            <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+        <div class="sidebar">
+            <button class="nav-btn active" data-tip="Note" onclick="switchTab('note', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </button>
+
+            <button class="nav-btn" data-tip="Lifespan" onclick="switchTab('lifespan', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+            </button>
+
+            <div class="sidebar-divider"></div>
+
+            <button class="nav-btn" id="btn-security" data-tip="Security" onclick="switchTab('security', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </button>
+
+            <button class="nav-btn" id="btn-readtimer" data-tip="Burn Timer" onclick="switchTab('readtimer', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                    <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="main">
+
+            <div class="panel active" id="panel-note">
+                <div class="panel-title">Write your note</div>
+                <textarea id="noteInput" placeholder="Write your note here..." maxlength="1000" oninput="updateCounter()"></textarea>
+                <div class="char-counter" id="charCounter">0 / 1000</div>
+                <div class="badge-row">
+                    <span class="badge" id="badge-lifespan">5 min</span>
+                    <span class="badge" id="badge-password">Password off</span>
+                    <span class="badge" id="badge-timer">No burn timer</span>
+                </div>
+            </div>
+
+            <div class="panel" id="panel-lifespan">
+                <div class="panel-title">Note lifespan</div>
+                <div class="field">
+                    <label>Expires after</label>
+                    <div class="row">
+                        <input type="number" id="timeValue" value="5" min="1" oninput="updateBadges()">
+                        <select id="timeUnit" onchange="updateBadges()">
+                            <option value="1">Seconds</option>
+                            <option value="60" selected>Minutes</option>
+                            <option value="3600">Hours</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="panel-security">
+                <div class="panel-title">Security</div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Password protection</div>
+                        <div class="toggle-sub">Reader must enter a password to decrypt</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="usePassword" onchange="togglePassword(); updateBadges();">
+                        <span class="switch-track"></span>
+                    </label>
+                </div>
+                <div class="sub-field" id="passwordField">
+                    <div class="field" style="margin-bottom:0;">
+                        <label>Password</label>
+                        <input type="password" id="passwordInput" placeholder="Enter a password...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" id="panel-readtimer">
+                <div class="panel-title">Burn timer</div>
+                <div class="toggle-row">
+                    <div>
+                        <div class="toggle-label">Burn after reading</div>
+                        <div class="toggle-sub">Note disappears from screen after time runs out</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="useReadTimer" onchange="toggleReadTimer(); updateBadges();">
+                        <span class="switch-track"></span>
+                    </label>
+                </div>
+                <div class="sub-field" id="readTimerField">
+                    <div class="field" style="margin-bottom:0;">
+                        <label>Seconds to read</label>
+                        <input type="number" id="readTimerValue" value="30" min="5" max="300" oninput="updateReadTimerPreview(); updateBadges();">
+                    </div>
+                    <div class="timer-preview">
+                        <div class="timer-dot"></div>
+                        <span id="timerPreviewText">Reader has 30 seconds before the note self-destructs</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn-generate" onclick="createNote()">Generate Link</button>
+            </div>
+
+            <div id="linkArea">
+                <div class="link-row">
+                    <span id="generatedLink"></span>
+                    <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
+<a href="https://github.com/dreidrey/one-note-one-life" target="_blank" rel="noopener"
+   style="position:fixed; bottom:20px; right:20px; color:#4a4a4a; transition:color 0.15s;"
+   onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#4a4a4a'">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+</a>
+
 <script>
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('panel-' + tab).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function updateCounter() {
+        const len = document.getElementById('noteInput').value.length;
+        const el = document.getElementById('charCounter');
+        el.textContent = len + ' / 1000';
+        el.classList.toggle('warn', len > 900);
+    }
+
+    function togglePassword() {
+        const checked = document.getElementById('usePassword').checked;
+        document.getElementById('passwordField').classList.toggle('visible', checked);
+        if (!checked) document.getElementById('passwordInput').value = '';
+        document.getElementById('btn-security').classList.toggle('enabled', checked);
+    }
+
+    function toggleReadTimer() {
+        const checked = document.getElementById('useReadTimer').checked;
+        document.getElementById('readTimerField').classList.toggle('visible', checked);
+        document.getElementById('btn-readtimer').classList.toggle('enabled', checked);
+    }
+
+    function updateReadTimerPreview() {
+        const v = parseInt(document.getElementById('readTimerValue').value) || 30;
+        document.getElementById('timerPreviewText').textContent =
+            `Reader has ${v} second${v !== 1 ? 's' : ''} before the note self-destructs`;
+    }
+
+    function updateBadges() {
+        const val = parseInt(document.getElementById('timeValue').value) || 5;
+        const unit = parseInt(document.getElementById('timeUnit').value);
+        const unitLabel = unit === 1 ? 'sec' : unit === 60 ? 'min' : 'hr';
+        document.getElementById('badge-lifespan').textContent = val + ' ' + unitLabel;
+
+        const pwOn = document.getElementById('usePassword').checked;
+        const pwBadge = document.getElementById('badge-password');
+        pwBadge.textContent = pwOn ? 'Password on' : 'Password off';
+        pwBadge.classList.toggle('on', pwOn);
+
+        const timerOn = document.getElementById('useReadTimer').checked;
+        const timerVal = parseInt(document.getElementById('readTimerValue').value) || 30;
+        const timerBadge = document.getElementById('badge-timer');
+        timerBadge.textContent = timerOn ? timerVal + 's burn timer' : 'No burn timer';
+        timerBadge.classList.toggle('on', timerOn);
+    }
+
     function showToast(msg) {
         const t = document.getElementById('toast');
         t.innerText = msg;
@@ -217,17 +537,23 @@
     }
 
     async function generateKey() {
-        return crypto.subtle.generateKey(
-            { name: "AES-GCM", length: 256 },
-            true,
-            ["encrypt", "decrypt"]
-        );
+        return crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
     }
 
     async function exportKey(key) {
         const raw = await crypto.subtle.exportKey("raw", key);
         return btoa(String.fromCharCode(...new Uint8Array(raw)))
             .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    async function deriveKey(password, baseKeyRaw) {
+        const enc = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+        return crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: baseKeyRaw, iterations: 100000, hash: "SHA-256" },
+            keyMaterial,
+            { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+        );
     }
 
     async function encrypt(plaintext, key) {
@@ -244,21 +570,33 @@
         const content = document.getElementById('noteInput').value;
         const val = parseInt(document.getElementById('timeValue').value);
         const unit = parseInt(document.getElementById('timeUnit').value);
+        const usePassword = document.getElementById('usePassword').checked;
+        const password = document.getElementById('passwordInput').value;
+        const useReadTimer = document.getElementById('useReadTimer').checked;
+        const readTimerVal = parseInt(document.getElementById('readTimerValue').value) || 30;
 
-        if (!content.trim())           { showToast("Note is empty"); return; }
-        if (isNaN(val) || val <= 0)    { showToast("Lifespan must be greater than 0"); return; }
-        if (unit === 1 && val > 60)    { showToast("Max 60 seconds"); return; }
-        if (unit === 60 && val > 60)   { showToast("Max 60 minutes"); return; }
-        if (unit === 3600 && val > 24) { showToast("Max 24 hours"); return; }
+        if (!content.trim())                 { showToast("Note is empty"); return; }
+        if (isNaN(val) || val <= 0)          { showToast("Lifespan must be greater than 0"); return; }
+        if (unit === 1 && val > 60)          { showToast("Max 60 seconds"); return; }
+        if (unit === 60 && val > 60)         { showToast("Max 60 minutes"); return; }
+        if (unit === 3600 && val > 24)       { showToast("Max 24 hours"); return; }
+        if (usePassword && !password.trim()) { showToast("Enter a password or turn it off"); return; }
 
-        const key = await generateKey();
-        const encrypted = await encrypt(content, key);
-        const keyStr = await exportKey(key);
+        const baseKey = await generateKey();
+        const baseKeyRaw = await crypto.subtle.exportKey("raw", baseKey);
+        const keyStr = await exportKey(baseKey);
+        const encryptKey = usePassword ? await deriveKey(password, new Uint8Array(baseKeyRaw)) : baseKey;
+        const encrypted = await encrypt(content, encryptKey);
 
         const res = await fetch('/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret: encrypted, seconds: val * unit })
+            body: JSON.stringify({
+                secret: encrypted,
+                seconds: val * unit,
+                password_protected: usePassword,
+                read_seconds: useReadTimer ? readTimerVal : null
+            })
         });
         const data = await res.json();
 
@@ -276,14 +614,6 @@
             .catch(() => showToast("Copy failed"));
     }
 </script>
-
-<a href="https://github.com/dreidrey/one-note-one-life" target="_blank" rel="noopener"
-   style="position:fixed; bottom:20px; right:20px; color:#555; transition:color 0.15s;"
-   onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#555'">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-    </svg>
-</a>
 
 </body>
 </html>
