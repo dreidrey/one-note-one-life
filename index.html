@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Note, One Life</title>
+    <style>
+        :root {
+            --red: #ff4d4d;
+            --bg: #121212;
+            --panel: #1e1e1e;
+            --input-bg: #252525;
+            --border: #2e2e2e;
+            --text: #b0b0b0;
+            --text-dim: #555;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        .container {
+            background: var(--panel);
+            padding: 2rem;
+            border-radius: 10px;
+            border-top: 3px solid var(--red);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            color: var(--red);
+            text-align: center;
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 1.75rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: var(--input-bg);
+            color: #ddd;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            resize: none;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+            transition: border-color 0.15s;
+        }
+        textarea::placeholder { color: var(--text-dim); }
+        textarea:focus { border-color: var(--red); }
+
+        .time-group { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+
+        input[type="number"], select {
+            background: var(--input-bg);
+            color: #ddd;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: border-color 0.15s;
+        }
+        input[type="number"] { flex: 1; }
+        select { flex: 2; cursor: pointer; }
+        input[type="number"]:focus,
+        select:focus { border-color: var(--red); }
+
+        button {
+            width: 100%;
+            background: var(--red);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        button:hover { background: #e63c3c; }
+
+        #linkArea {
+            display: none;
+            margin-top: 1.25rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+        }
+
+        .link-row { display: flex; align-items: center; gap: 10px; }
+
+        #generatedLink {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: var(--red);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: 1px solid #3a3a3a;
+            color: var(--text-dim);
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            width: auto;
+            flex-shrink: 0;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .copy-btn:hover { border-color: var(--red); color: var(--red); background: transparent; }
+
+        #toast {
+            position: fixed;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--red);
+            padding: 9px 20px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: bottom 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 1000;
+            white-space: nowrap;
+        }
+        #toast.show { bottom: 28px; }
+    </style>
+</head>
+<body>
+
+<div id="toast">—</div>
+
+<div class="container">
+    <h1>One Note, One Life</h1>
+    <p class="subtitle">Write once. Read once. Gone forever.</p>
+
+    <label>Note</label>
+    <textarea id="noteInput" placeholder="Write your note here..."></textarea>
+
+    <label>Lifespan</label>
+    <div class="time-group">
+        <input type="number" id="timeValue" value="5" min="1">
+        <select id="timeUnit">
+            <option value="1">Seconds</option>
+            <option value="60">Minutes</option>
+            <option value="3600">Hours</option>
+        </select>
+    </div>
+
+    <button onclick="createNote()">Generate Link</button>
+
+    <div id="linkArea">
+        <div class="link-row">
+            <span id="generatedLink"></span>
+            <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    async function generateKey() {
+        return crypto.subtle.generateKey(
+            { name: "AES-GCM", length: 256 },
+            true,
+            ["encrypt", "decrypt"]
+        );
+    }
+
+    async function exportKey(key) {
+        const raw = await crypto.subtle.exportKey("raw", key);
+        return btoa(String.fromCharCode(...new Uint8Array(raw)))
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    async function encrypt(plaintext, key) {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encoded = new TextEncoder().encode(plaintext);
+        const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
+        const combined = new Uint8Array(12 + ciphertext.byteLength);
+        combined.set(iv, 0);
+        combined.set(new Uint8Array(ciphertext), 12);
+        return btoa(String.fromCharCode(...combined));
+    }
+
+    async function createNote() {
+        const content = document.getElementById('noteInput').value;
+        const val = parseInt(document.getElementById('timeValue').value);
+        const unit = parseInt(document.getElementById('timeUnit').value);
+
+        if (!content.trim())           { showToast("Note is empty"); return; }
+        if (isNaN(val) || val <= 0)    { showToast("Lifespan must be greater than 0"); return; }
+        if (unit === 1 && val > 60)    { showToast("Max 60 seconds"); return; }
+        if (unit === 60 && val > 60)   { showToast("Max 60 minutes"); return; }
+        if (unit === 3600 && val > 24) { showToast("Max 24 hours"); return; }
+
+        const key = await generateKey();
+        const encrypted = await encrypt(content, key);
+        const keyStr = await exportKey(key);
+
+        const res = await fetch('/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: encrypted, seconds: val * unit })
+        });
+        const data = await res.json();
+
+        const link = `${window.location.origin}/view/${data.id}#${keyStr}`;
+        const el = document.getElementById('generatedLink');
+        el.innerText = link;
+        el.dataset.full = link;
+        document.getElementById('linkArea').style.display = 'block';
+    }
+
+    function copyToClipboard() {
+        const full = document.getElementById('generatedLink').dataset.full;
+        navigator.clipboard.writeText(full)
+            .then(() => showToast("Link copied"))
+            .catch(() => showToast("Copy failed"));
+    }
+</script>
+
+<a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener"
+   style="position:fixed; bottom:20px; right:20px; color:#555; transition:color 0.15s;"
+   onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#555'">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+</a>
+
+</body>
+</html>
