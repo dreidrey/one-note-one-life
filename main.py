@@ -128,7 +128,7 @@ async def view_note(note_id: str):
     <p class="footer-note">It was already read, or its time ran out.</p>
     <a class="back" href="/">← Create a new note</a>
 </div>
-    <a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener"
+    <a href="https://github.com/dreidrey/one-note-one-life" target="_blank" rel="noopener"
        style="position:fixed; bottom:20px; right:20px; color:#555; transition:color 0.15s;"
        onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#555'">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -198,7 +198,7 @@ async def view_note(note_id: str):
 
     main();
 </script>
-    <a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank" rel="noopener"
+    <a href="https://github.com/dreidrey/one-note-one-life" target="_blank" rel="noopener"
        style="position:fixed; bottom:20px; right:20px; color:#555; transition:color 0.15s;"
        onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#555'">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
