@@ -4,6 +4,8 @@ Write once. Read once. Gone forever.
 
 A self-destructing note app. Write a secret, share the link and once opened, the note is permanently deleted. No accounts, no history, no trace.
 
+![One Note, One Life](ss.png)
+
 ## What it does
 
 - **Encrypted** — your note is locked before it leaves your browser. The server never sees it.
