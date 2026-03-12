@@ -4,9 +4,8 @@ Write once. Read once. Gone forever.
 
 A self-destructing note app. Write a secret, share the link and once opened, the note is permanently deleted. No accounts, no history, no trace.
 
-**Live site:** [one-note-one-life.onrender.com](https://one-note-one-life.onrender.com)
-
 ![One Note, One Life](ss.png)
+<p align="center"><a href="https://one-note-one-life.onrender.com">Write your note here...</a></p>
 
 ## What it does
 
