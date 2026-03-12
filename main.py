@@ -1,6 +1,7 @@
-import uuid
 import time
 import asyncio
+import random
+import string
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
@@ -11,6 +12,19 @@ vault = {}
 class NoteSchema(BaseModel):
     secret: str
     seconds: int
+
+def short_id(length=8):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+GITHUB_ICON = """
+<a href="https://github.com/dreidrey/one-note-one-life" target="_blank" rel="noopener"
+   style="position:fixed; bottom:20px; right:20px; color:#555; transition:color 0.15s;"
+   onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#555'">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+</a>
+"""
 
 BASE_STYLE = """
 <style>
@@ -106,8 +120,9 @@ async def read_index():
 @app.post("/create")
 async def create_note(item: NoteSchema):
     lifespan = min(item.seconds, 86400)
-    note_id = str(uuid.uuid4())
-    # Stores only the encrypted blob — server never sees plaintext
+    note_id = short_id()
+    while note_id in vault:
+        note_id = short_id()
     vault[note_id] = {"content": item.secret, "expires_at": time.time() + lifespan}
     return {"id": note_id}
 
@@ -128,19 +143,11 @@ async def view_note(note_id: str):
     <p class="footer-note">It was already read, or its time ran out.</p>
     <a class="back" href="/">← Create a new note</a>
 </div>
-    <a href="https://github.com/dreidrey/one-note-one-life" target="_blank" rel="noopener"
-       style="position:fixed; bottom:20px; right:20px; color:#555; transition:color 0.15s;"
-       onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#555'">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
-    </a>
+{GITHUB_ICON}
 </body></html>""", status_code=404)
 
     encrypted = note_data["content"]
 
-    # The encrypted blob is injected into the page.
-    # The decryption key comes from the #fragment in the URL — never sent to this server.
     return HTMLResponse(f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -158,7 +165,6 @@ async def view_note(note_id: str):
 </div>
 
 <script>
-    // Import key from base64url string
     async function importKey(keyStr) {{
         const raw = Uint8Array.from(
             atob(keyStr.replace(/-/g, '+').replace(/_/g, '/')),
@@ -167,7 +173,6 @@ async def view_note(note_id: str):
         return crypto.subtle.importKey("raw", raw, {{ name: "AES-GCM" }}, false, ["decrypt"]);
     }}
 
-    // Decrypt base64 blob (IV prepended) → plaintext string
     async function decrypt(blob, key) {{
         const combined = Uint8Array.from(atob(blob), c => c.charCodeAt(0));
         const iv = combined.slice(0, 12);
@@ -177,7 +182,7 @@ async def view_note(note_id: str):
     }}
 
     async function main() {{
-        const keyStr = window.location.hash.slice(1); // everything after #
+        const keyStr = window.location.hash.slice(1);
         const encrypted = {repr(encrypted)};
 
         if (!keyStr) {{
@@ -198,13 +203,7 @@ async def view_note(note_id: str):
 
     main();
 </script>
-    <a href="https://github.com/dreidrey/one-note-one-life" target="_blank" rel="noopener"
-       style="position:fixed; bottom:20px; right:20px; color:#555; transition:color 0.15s;"
-       onmouseover="this.style.color='#ff4d4d'" onmouseout="this.style.color='#555'">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-        </svg>
-    </a>
+{GITHUB_ICON}
 </body></html>""")
 
 
@@ -220,6 +219,7 @@ async def auto_cleanup():
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(auto_cleanup())
+
 
 @app.get("/ping")
 async def ping():
